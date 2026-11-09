@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HR Chat Assistant</title>
+  <style>
+    :root {
+      --bg: #f3f7fb;
+      --panel: rgba(255, 255, 255, 0.82);
+      --panel-strong: #ffffff;
+      --line: rgba(18, 42, 74, 0.12);
+      --shadow: 0 18px 50px rgba(20, 35, 58, 0.12);
+      --navy: #14213d;
+      --navy-soft: #243b69;
+      --brand: #2d6cdf;
+      --brand-soft: #eaf1ff;
+      --success: #0ea879;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #1d2a37;
+      --muted: #68778d;
+      --surface: #f7f9fc;
+      --surface-strong: #eef4ff;
+      --event-bg: #0d172a;
+      --event-line: rgba(148, 163, 184, 0.2);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(103, 142, 255, 0.18), transparent 35%),
+        linear-gradient(180deg, #eef4fb 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    body {
+      padding: 28px;
+    }
+
+    .app-shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 24px;
+      min-height: calc(100vh - 56px);
+    }
+
+    .sidebar,
+    .card {
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--brand), #6ea9ff);
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 12px 30px rgba(45, 108, 223, 0.35);
+    }
+
+    .brand h2 {
+      margin: 0;
+      font-size: 1.04rem;
+      letter-spacing: 0.02em;
+    }
+
+    .brand small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 0.72rem;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      padding: 11px 12px;
+      border-radius: 12px;
+      color: var(--navy-soft);
+      font: inherit;
+      font-weight: 600;
+      text-align: left;
+      width: 100%;
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover { background: var(--surface); }
+    [hidden] { display: none !important; }
+
+    .nav-item.active {
+      background: var(--surface-strong);
+      border-color: rgba(45, 108, 223, 0.12);
+      color: var(--brand);
+    }
+
+    .sidebar-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: auto;
+    }
+
+    .sidebar-panel label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    select {
+      width: 100%;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 0.97rem;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    .ghost-btn {
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      font-weight: 700;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--brand), #5a8ef5);
+      color: white;
+      box-shadow: 0 12px 22px rgba(45, 108, 223, 0.26);
+    }
+
+    .secondary-btn {
+      background: #ebf2ff;
+      color: var(--brand);
+    }
+
+    .ghost-btn {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .primary-btn:hover,
+    .secondary-btn:hover,
+    .ghost-btn:hover { transform: translateY(-1px); }
+
+    .login-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(14, 168, 121, 0.09);
+      border: 1px solid rgba(14, 168, 121, 0.15);
+      color: var(--success);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(14, 168, 121, 0.12);
+    }
+
+    .main-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 22px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 2vw, 2.5rem);
+      letter-spacing: -0.04em;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--navy-soft);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.9fr);
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .card {
+      padding: 20px;
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      font-size: 1.12rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 6px rgba(14, 168, 121, 0.13);
+    }
+
+    .messages {
+      height: 420px;
+      overflow-y: auto;
+      background: linear-gradient(180deg, #f8fbff 0%, #f4f8fd 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: var(--text);
+      font-size: 0.96rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .messages { display: flex; flex-direction: column; gap: 10px; white-space: normal; }
+    .bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--brand), #5a8ef5);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble.assistant {
+      align-self: flex-start;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-bottom-left-radius: 4px;
+    }
+    .bubble.system {
+      align-self: center;
+      background: var(--surface-strong);
+      color: var(--navy-soft);
+      font-size: 0.85rem;
+      padding: 6px 12px;
+    }
+    .bubble.user.note { opacity: 0.85; border: 1px dashed rgba(255,255,255,.6); }
+    .run-hint { margin-right: auto; align-self: center; color: var(--muted); font-size: 0.85rem; }
+    .chat-empty { color: var(--muted); text-align: center; margin: auto; }
+    .bubble ul { margin: 6px 0; padding-left: 20px; }
+    .bubble p { margin: 0 0 6px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .view-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff;
+    }
+    .view-list { display: grid; gap: 10px; margin-top: 12px; }
+    .view-note { color: var(--muted); font-size: 0.9rem; }
+    .badge {
+      border-radius: 999px; padding: 4px 10px; font-size: 0.72rem; font-weight: 800;
+      text-transform: uppercase; background: var(--surface-strong); color: var(--navy-soft);
+    }
+    .badge.confirmed { background: rgba(14,168,121,.12); color: var(--success); }
+    .badge.pending { background: rgba(245,158,11,.14); color: #92400e; }
+    .badge.rejected, .badge.expired, .badge.superseded { background: rgba(239,68,68,.1); color: var(--danger); }
+    .badge.amended { background: var(--surface-strong); color: var(--muted); }
+    .search-row { display: flex; gap: 10px; }
+    .search-row input {
+      flex: 1; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font: inherit; outline: none;
+    }
+    .proposal-status { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
+    .proposal-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .composer {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      resize: vertical;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      color: var(--text);
+      box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.02);
+      outline: none;
+    }
+
+    textarea:focus,
+    select:focus {
+      border-color: rgba(45,108,223,0.42);
+      box-shadow: 0 0 0 4px rgba(45,108,223,0.08);
+    }
+
+    .composer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    .ghost-btn {
+      min-height: 42px;
+      padding: 0 18px;
+    }
+
+    .proposal-area {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .proposal-card {
+      background: linear-gradient(180deg, rgba(255, 181, 72, 0.08), rgba(255, 255, 255, 0.3));
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .proposal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .proposal-type {
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.2);
+      color: #92400e;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 800;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .proposal-body {
+      color: var(--text);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      white-space: pre-wrap;
+    }
+
+    .proposal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .events {
+      height: 600px;
+      overflow-y: auto;
+      background: linear-gradient(180deg, #0d172a 0%, #0b1320 100%);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 18px;
+      padding: 16px;
+      color: #dfeaf8;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .event-row {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 1px solid var(--event-line);
+      border-radius: 10px;
+      background: rgba(148, 163, 184, 0.04);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .event-badge {
+      align-self: start;
+      display: inline-flex;
+      justify-content: center;
+      padding: 5px 7px;
+      border-radius: 999px;
+      background: rgba(45, 108, 223, 0.12);
+      color: #b6d2ff;
+      border: 1px solid rgba(45, 108, 223, 0.2);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 1080px) {
+      body { padding: 18px; }
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+      .events { height: 320px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">HR</div>
+        <div>
+          <h2>HR Console</h2>
+          <small>Tenant-aware assistant</small>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Sidebar navigation">
+        <button class="nav-item active" data-view="chatView">Overview</button>
+        <button class="nav-item" data-view="policiesView">Policies</button>
+        <button class="nav-item" data-view="leaveView">Leave requests</button>
+      </nav>
+
+      <div class="sidebar-panel">
+        <label for="user">Active user</label>
+        <select id="user" aria-label="Select user">
+          <option value="maya">maya · summit · employee</option>
+          <option value="leila">leila · summit · hr</option>
+          <option value="ravi">ravi · pebble · employee</option>
+        </select>
+
+        <div class="login-actions">
+          <button id="loginBtn" class="primary-btn">Login</button>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <span id="who" class="status-pill">Not signed in</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Assistant Console</p>
+          <h1>HR Assistant</h1>
+        </div>
+        <div class="top-actions">
+          <span class="chip">Secure</span>
+          <span class="chip">Role-aware</span>
+          <span class="chip">Policy search</span>
+        </div>
+      </header>
+
+      <div class="content-grid" id="chatView">
+        <section class="card">
+          <div class="panel-header">
+            <h3>Conversation</h3>
+            <span class="dot" aria-label="active conversation"></span>
+          </div>
+
+          <div id="messages" class="messages" aria-live="polite"></div>
+
+          <div class="composer">
+            <textarea id="message" placeholder="Ask a policy question or request leave. While the assistant is working, anything you send is added to the same request."></textarea>
+            <div class="composer-actions">
+              <span id="runHint" class="run-hint"></span>
+              <button id="sendBtn" class="primary-btn">Send</button>
+            </div>
+          </div>
+
+          <div id="proposalArea" class="proposal-area"></div>
+        </section>
+
+        <aside class="card">
+          <div class="panel-header">
+            <h3>Live orchestration</h3>
+            <span class="dot" aria-label="live events"></span>
+          </div>
+          <div id="events" class="events"></div>
+        </aside>
+      </div>
+
+      <section class="card" id="policiesView" hidden>
+        <div class="panel-header"><h3>Policies</h3></div>
+        <p class="view-note">Search the company policies you are allowed to see (your company and role only).</p>
+        <div class="search-row">
+          <input id="policyQuery" placeholder="e.g. late policy, PTO, conduct" />
+          <button id="policyBtn" class="primary-btn">Search</button>
+        </div>
+        <div id="policyResults" class="view-list"></div>
+      </section>
+
+      <section class="card" id="leaveView" hidden>
+        <div class="panel-header">
+          <h3>Leave requests</h3>
+          <button id="leaveRefresh" class="secondary-btn">Refresh</button>
+        </div>
+        <div id="leaveBalance" class="view-note"></div>
+        <div id="leaveList" class="view-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
